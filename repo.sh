@@ -102,7 +102,7 @@ if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
     rsync /tmp/repo/ "${_repo_path}/" -a --copy-links --remove-source-files
     repo-add "${_repo_path}/${REPO}.db.tar.zst" "${_repo_path}"/*.pkg.*
     git add -A
-    git commit -m "Update repository packages:\n$(git diff --cached --name-status)"
+    git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"
     git push origin repo
     chown -R "${PUID:-1000}:${PGID:-1000}" .
 fi
