@@ -19,6 +19,8 @@ cp /etc/makepkg.conf /tmp/makepkg.conf
 chown builder:builder /tmp/makepkg.conf
 sed -Ei 's\^#?PKGEXT=.*$\PKGEXT=.pkg.tar.zst\' /tmp/makepkg.conf
 sed -Ei "s\\^#?PKGDEST=.*$\\PKGDEST=/tmp/repo\\" /tmp/makepkg.conf
+sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=$(nproc)\\" /tmp/makepkg.conf
+eval "$(grep 'CARCH' /etc/makepkg.conf)"
 
 # Add zuepfe-original repo for pacman-hacks
 cat <<EOF >/etc/pacman.conf
@@ -42,7 +44,7 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
-_repo_path="${REPO}/$(uname -m)"
+_repo_path="${REPO}/${CARCH}"
 git fetch origin repo:repo
 git show "repo:repo/${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
     grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
