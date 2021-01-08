@@ -102,7 +102,7 @@ if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
     mv /tmp/repo/* "${_repo_path}/"
     repo-add "${_repo_path}/${REPO}.db.tar.zst" "${_repo_path}"/*.pkg.*
     git add -A
-    git commit --amend -m "Update repository packages"
-    git push --force-with-lease origin repo
+    git commit -m "Update repository packages:\n$(git diff --cached --name-status)"
+    git push origin repo
     chown -R "${PUID:-1000}:${PGID:-1000}" .
 fi

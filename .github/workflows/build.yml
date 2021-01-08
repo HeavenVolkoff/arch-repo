@@ -30,7 +30,6 @@ jobs:
             -e EMAIL="vasconcellos.dev@gmail.com" \
             -e GIT_COMMITTER_EMAIL="vasconcellos.dev@gmail.com" \
             -e GIT_COMMITTER_EMAIL="vasconcellos.dev@gmail.com" \
-            -e GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
             --rm --init --entrypoint bash \
             archlinux:latest repo.sh
 
