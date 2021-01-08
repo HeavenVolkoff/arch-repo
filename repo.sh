@@ -73,10 +73,10 @@ for _path in "$(pwd)"/*; do
         fi
     elif [ -f ./REPKGBUILD ]; then
         remakepkg -f
-        for _pkg in ./pkg/*.pkg.*; do
+        for _pkg in ./*.pkg.*; do
             mv "$_pkg" /tmp/repo/
         done
-        rm -fr ./pkg ./*.pkg.*
+        rm -fr ./pkg
     fi
 done
 
