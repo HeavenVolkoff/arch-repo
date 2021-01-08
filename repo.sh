@@ -111,12 +111,12 @@ while IFS= read -r -d '' _pkg; do
     _pkgname="$(echo "$_pkginfo" | awk -F' = ' '{ if ($1 == "pkgname") print $2 }')"
     if ! grep -q "${_pkgname}-${_pkgver}" /tmp/packages.txt; then
         mv "$_pkg" "${_repo_path}/"
-        printf -v _pkgs '%s\0%s' "$_pkgs" "$_pkg"
+        _pkgs="$(printf '%s\0%s' "$_pkgs" "$_pkg")"
     fi
 done < <(find /tmp/repo -type f -name '*.pkg.*' -print0 | sort -zt-)
 
 # Generate new repository database
-printf '%s' "_pkgs" | xargs -0r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
+printf '%s' "$_pkgs" | xargs -0r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
 
 # Resolve symlinks to hard copies
 find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
