@@ -99,6 +99,6 @@ if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
     repo-add ./repo/hvolkoff.db.tar.zst ./repo/*.pkg.*
     git add -A
     git commit --amend -m "Update repository packages"
-    git push --force-with-lease
+    git push --force-with-lease origin repo
     chown -R "${PUID:-1000}:${PGID:-1000}" .
 fi
