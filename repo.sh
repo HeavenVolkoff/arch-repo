@@ -42,6 +42,7 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
+git fetch origin repo:repo
 git show repo:repo/hvolkoff.db.tar.zst | tar -tvf - --zst |
     grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
 chown builder:builder /tmp/packages.txt

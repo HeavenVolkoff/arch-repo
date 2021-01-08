@@ -23,6 +23,8 @@ jobs:
             -v "$(pwd)":/src \
             -e PUID="$(id -g)" \
             -e PGID="$(id -g)" \
+            -e GIT_AUTHOR_NAME="Vítor Vasconcellos" \
+            -e GIT_COMMITTER_EMAIL="vasconcellos.dev@gmail.com" \
             -e GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
             --rm --init --entrypoint bash \
             archlinux:latest repo.sh
