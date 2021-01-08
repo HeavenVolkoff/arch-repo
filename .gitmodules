@@ -1,0 +1,3 @@
+[submodule "ungoogled-chromium"]
+	path = ungoogled-chromium
+	url = https://aur.archlinux.org/ungoogled-chromium

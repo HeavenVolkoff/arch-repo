@@ -46,7 +46,7 @@ pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 # Retrieve current packages in repo
 _repo_path="${REPO}/${CARCH}"
 git fetch origin repo:repo
-git show "repo:repo/${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
+git show "repo:${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
     grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
 chown builder:builder /tmp/packages.txt
 
