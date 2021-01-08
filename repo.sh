@@ -42,8 +42,9 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
+_repo_path="${REPO}/$(uname -m)"
 git fetch origin repo:repo
-git show repo:repo/hvolkoff.db.tar.zst | tar -tvf - --zst |
+git show "repo:repo/${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
     grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
 chown builder:builder /tmp/packages.txt
 
@@ -94,9 +95,9 @@ if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
     trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
 
     git clean -xfd
-    mkdir -p repo
-    mv /tmp/repo/* ./repo/
-    repo-add ./repo/hvolkoff.db.tar.zst ./repo/*.pkg.*
+    mkdir -p "$_repo_path"
+    mv /tmp/repo/* "${_repo_path}/"
+    repo-add "${_repo_path}/${REPO}.db.tar.zst" "${_repo_path}"/*.pkg.*
     git add -A
     git commit --amend -m "Update repository packages"
     git push --force-with-lease origin repo

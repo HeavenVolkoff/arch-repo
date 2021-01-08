@@ -23,6 +23,7 @@ jobs:
             -v "$(pwd)":/src \
             -e PUID="$(id -g)" \
             -e PGID="$(id -g)" \
+            -e REPO="hvolkoff" \
             -e GIT_AUTHOR_NAME="Vítor Vasconcellos" \
             -e GIT_COMMITTER_NAME="Vítor Vasconcellos" \
             -e EMAIL="vasconcellos.dev@gmail.com" \
