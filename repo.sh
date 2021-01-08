@@ -41,7 +41,7 @@ pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
-pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
+pacman -Syq --noconfirm --noprogressbar git git-lfs pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
 _repo_path="${REPO}/${CARCH}"
@@ -51,6 +51,7 @@ git show "repo:${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
 chown builder:builder /tmp/packages.txt
 
 # Update submodules
+git lfs install
 git submodule update --init --remote --recursive
 
 # Build packages

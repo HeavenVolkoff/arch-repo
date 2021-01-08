@@ -14,6 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
+          lfs: true
           fetch-depth: 0
 
       - name: Build packages on Archlinux docker 
