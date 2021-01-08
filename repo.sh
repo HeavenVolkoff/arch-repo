@@ -83,34 +83,46 @@ for _path in "$(pwd)"/*; do
     fi
 done
 
+# Change branch to repo
 cd ..
-rm -f /tmp/repo/*.sig
-if find /tmp/repo -type f -name '*.pkg.*'; then
-    git clean -dfX
 
-    restore_stash="true"
-    if ! git diff-index --quiet HEAD --; then
-        git stash -uaq
-        restore_stash="git stash apply"
-    fi
+git clean -dfX
 
-    git checkout repo
-    trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
-
-    git clean -dfx
-    mkdir -p "$_repo_path"
-
-    # Copy new packages
-    mv /tmp/repo/*.pkg.* "${_repo_path}/"
-
-    # Generate new repository database
-    find . -type f -name '*.pkg.*' | sort -t- | xargs -r repo-add "${_repo_path}/${REPO}.db.tar.zst"
-
-    # Resolve symlinks
-    find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
-
-    git add -A
-    git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"
-    git push origin repo
-    chown -R "${PUID:-1000}:${PGID:-1000}" .
+restore_stash="true"
+if ! git diff-index --quiet HEAD --; then
+    git stash -uaq
+    restore_stash="git stash apply"
 fi
+
+git checkout repo
+trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
+git clean -dfx
+
+# Ensure repo directory exists
+mkdir -p "$_repo_path"
+
+# Remove generated pacakge signature files
+rm -f /tmp/repo/*.sig
+_pkgs=""
+# Only copy packages which are not already present in database
+while IFS= read -r -d '' _pkg; do
+    _pkginfo="$(tar -Oxf "$_pkg" .PKGINFO)"
+    _pkgver="$(echo "$_pkginfo" | awk -F' = ' '{ if ($1 == "pkgver") print $2 }')"
+    _pkgname="$(echo "$_pkginfo" | awk -F' = ' '{ if ($1 == "pkgname") print $2 }')"
+    if ! grep -q "${_pkgname}-${_pkgver}" /tmp/packages.txt; then
+        mv "$_pkg" "${_repo_path}/"
+        printf -v _pkgs '%s\0%s' "$_pkgs" "$_pkg"
+    fi
+done < <(find /tmp/repo -type f -name '*.pkg.*' -print0 | sort -zt-)
+
+# Generate new repository database
+printf '%s' "_pkgs" | xargs -0r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
+
+# Resolve symlinks to hard copies
+find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
+
+# Commit/push new packages
+git add -A
+git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"
+git push origin repo
+chown -R "${PUID:-1000}:${PGID:-1000}" .
