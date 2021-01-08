@@ -1,0 +1,7 @@
+repkg extra/nvidia-dkms
+
+remove-depend libglvnd
+add-optdepend libglvnd: Needed for using OpenGL application
+
+remove-depend nvidia-utils
+add-optdepend nvidia-utils: Extra tools and scripts for managing your graphics card
