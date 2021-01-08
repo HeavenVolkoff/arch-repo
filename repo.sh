@@ -42,12 +42,9 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
-touch /tmp/packages.txt
+git show repo:repo/hvolkoff.db.tar.zst | tar -tvf - --zst |
+    grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
 chown builder:builder /tmp/packages.txt
-if curl -L#Of \
-    "https://$(echo "$GITHUB_REPOSITORY" | awk -F'/' '{ printf "%s.github.io/%s",$1,$2; }')/hvolkoff.db"; then
-    tar -tvJ ./hvolkoff.db | grep -e "^d" | awk '{print $6}' | tr -d '/' >>/tmp/packages.txt
-fi
 
 # Update submodules
 git submodule update --init --remote --recursive
@@ -62,7 +59,11 @@ for _path in "$(pwd)"/*; do
         _pkgrel="$(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "pkgrel") print $2 }')"
         _status=0
         for _pkgname in $(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "pkgname") print $2 }'); do
-            _return="$(grep "${_pkgname}-${_pkgver}-${_pkgrel}" /tmp/packages.txt && echo 0 || echo 1)"
+            if echo "$_pkgname" | grep -qE -- '-git$'; then
+                _status=1
+                break
+            fi
+            _return="$(grep -q "${_pkgname}-${_pkgver}-${_pkgrel}" /tmp/packages.txt && echo 0 || echo 1)"
             _status=$((_return + _status))
         done
         if [ "$_status" -ne 0 ]; then
@@ -71,9 +72,7 @@ for _path in "$(pwd)"/*; do
     elif [ -f ./REPKGBUILD ]; then
         remakepkg -f
         for _pkg in ./pkg/*.pkg.*; do
-            if ! grep "$_pkg" /tmp/packages.txt; then
-                mv "$_pkg" /tmp/repo/
-            fi
+            mv "$_pkg" /tmp/repo/
         done
         rm -fr ./pkg ./*.pkg.*
     fi
