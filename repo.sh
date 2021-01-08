@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -xeu
-trap 'rm -f ${_pkgs:-} ${_makepkgconf:-}' EXIT
+trap 'rm -f /tmp/packages.txt /tmp/makepkg.conf' EXIT
 
 # makepkg needs a non root user
 useradd builder -m
@@ -9,13 +9,14 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 chown -R builder:builder .
 
 # Make output repository for pakcages
-_repo="$(mktemp -d)"
+mkdir -p /tmp/repo
+chown builder:builder /tmp/repo
 
 # Change some makepkg options
-_makepkgconf="$(mktemp)"
-cp /etc/makepkg.conf "$_makepkgconf"
-sed -Ei 's\^#?PKGEXT=.*$\PKGEXT=.pkg.tar.zst\' "$_makepkgconf"
-sed -Ei "s\\^#?PKGDEST=.*$\\PKGDEST=${_repo}\\" "$_makepkgconf"
+cp /etc/makepkg.conf /tmp/makepkg.conf
+chown builder:builder /tmp/makepkg.conf
+sed -Ei 's\^#?PKGEXT=.*$\PKGEXT=.pkg.tar.zst\' /tmp/makepkg.conf
+sed -Ei "s\\^#?PKGDEST=.*$\\PKGDEST=/tmp/repo\\" /tmp/makepkg.conf
 
 # Add zuepfe-original repo for pacman-hacks
 cat <<EOF >/etc/pacman.conf
@@ -39,10 +40,11 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 pacman -Sy --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
-_pkgs="$(mktemp)"
+touch /tmp/packages.txt
+chown builder:builder /tmp/packages.txt
 if curl -L#Of \
     "https://$(echo "$GITHUB_REPOSITORY" | awk -F'/' '{ printf "%s.github.io/%s",$1,$2; }')/hvolkoff.db"; then
-    tar -tvJ ./hvolkoff.db | grep -e "^d" | awk '{print $6}' | tr -d '/' >>_pkgs
+    tar -tvJ ./hvolkoff.db | grep -e "^d" | awk '{print $6}' | tr -d '/' >> /tmp/packages.txt
 fi
 
 # Update submodules
@@ -58,21 +60,26 @@ for _path in "$(pwd)"/*; do
         _pkgrel="$(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "pkgrel") print $2 }')"
         _status=0
         for _pkgname in $(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "pkgname") print $2 }'); do
-            _return="$(grep "${_pkgname}-${_pkgver}-${_pkgrel}" "$_pkgs" && echo 0 || echo 1)"
+            _return="$(grep "${_pkgname}-${_pkgver}-${_pkgrel}" /tmp/packages.txt && echo 0 || echo 1)"
             _status=$((_return + _status))
         done
         if [ "$_status" -ne 0 ]; then
-            su -- builder makepkg -Cfs --config "$_makepkgconf" --needed --noconfirm --noprogressbar
+            su -- builder makepkg -Cfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
         fi
     elif [ -f ./REPKGBUILD ]; then
         remakepkg -f
         for _pkg in ./pkg/*.pkg.*; do
-            if ! grep "$_pkg" "$_pkgs"; then
-                mv "$_pkg" "${_repo}"
+            if ! grep "$_pkg" /tmp/packages.txt; then
+                mv "$_pkg" /tmp/repo/
             fi
         done
     fi
-
-    cd ..
-    rm -f "$_repo"/*.sig
 done
+
+cd ..
+rm -f /tmp/repo/*.sig
+git checkout repo
+mv /tmp/repo/* ./
+repo-add ./hvolkoff.db ./*.pkg.*
+git add -A
+git commit --ammend -m "Update repository"
