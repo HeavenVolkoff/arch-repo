@@ -2,8 +2,11 @@
 
 set -xeu
 
+trap 'git clean -dfX' EXIT
+
 # makepkg needs a non root user
-useradd builder -m
+groupadd builder -g "${PGID:-1000}"
+useradd builder -m -u "${PUID:-1000}" -g "${PGID:-1000}"
 echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 chown -R builder:builder .
 
@@ -36,14 +39,14 @@ pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
-pacman -Sy --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
+pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
 touch /tmp/packages.txt
 chown builder:builder /tmp/packages.txt
 if curl -L#Of \
     "https://$(echo "$GITHUB_REPOSITORY" | awk -F'/' '{ printf "%s.github.io/%s",$1,$2; }')/hvolkoff.db"; then
-    tar -tvJ ./hvolkoff.db | grep -e "^d" | awk '{print $6}' | tr -d '/' >> /tmp/packages.txt
+    tar -tvJ ./hvolkoff.db | grep -e "^d" | awk '{print $6}' | tr -d '/' >>/tmp/packages.txt
 fi
 
 # Update submodules
@@ -63,7 +66,7 @@ for _path in "$(pwd)"/*; do
             _status=$((_return + _status))
         done
         if [ "$_status" -ne 0 ]; then
-            su -- builder makepkg -Cfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
+            su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
         fi
     elif [ -f ./REPKGBUILD ]; then
         remakepkg -f
@@ -72,18 +75,29 @@ for _path in "$(pwd)"/*; do
                 mv "$_pkg" /tmp/repo/
             fi
         done
+        rm -fr ./pkg ./*.pkg.*
     fi
 done
 
 cd ..
 rm -f /tmp/repo/*.sig
-if ! find /tmp/repo -maxdepth 0 -type d -empty; then
-    git checkout repo
-    trap 'git reset --hard HEAD && git checkout main' EXIT
+if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
+    git clean -dfX
 
+    restore_stash="true"
+    if ! git diff-index --quiet HEAD --; then
+        git stash -uaq
+        restore_stash="git stash apply"
+    fi
+
+    git checkout repo
+    trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
+
+    git clean -xfd
     mkdir -p repo
     mv /tmp/repo/* ./repo/
-    repo-add ./repo/hvolkoff.db.zst ./repo/*.pkg.*
+    repo-add ./repo/hvolkoff.db.tar.zst ./repo/*.pkg.*
     git add -A
     git commit --amend -m "Update repository packages"
+    chown -R "${PUID:-1000}:${PGID:-1000}" .
 fi

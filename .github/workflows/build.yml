@@ -19,6 +19,8 @@ jobs:
           docker run \
             -w /src \
             -v "$(pwd)":/src \
+            -e PUID="$(id -g)" \
+            -e PGID="$(id -g)" \
             -e GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
             --rm --init --entrypoint bash \
             archlinux:latest repo.sh
