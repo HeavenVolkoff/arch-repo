@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -xeu
-trap 'rm -f /tmp/packages.txt /tmp/makepkg.conf' EXIT
 
 # makepkg needs a non root user
 useradd builder -m
@@ -78,8 +77,13 @@ done
 
 cd ..
 rm -f /tmp/repo/*.sig
-git checkout repo
-mv /tmp/repo/* ./
-repo-add ./hvolkoff.db ./*.pkg.*
-git add -A
-git commit --ammend -m "Update repository"
+if ! find /tmp/repo -maxdepth 0 -type d -empty; then
+    git checkout repo
+    trap 'git reset --hard HEAD && git checkout main' EXIT
+
+    mkdir -p repo
+    mv /tmp/repo/* ./repo/
+    repo-add ./repo/hvolkoff.db.zst ./repo/*.pkg.*
+    git add -A
+    git commit --amend -m "Update repository packages"
+fi
