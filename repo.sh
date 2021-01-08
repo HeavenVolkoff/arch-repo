@@ -41,7 +41,7 @@ pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
-pacman -Syq --noconfirm --noprogressbar git icu pacman base-devel pacman-hacks-build
+pacman -Syq --noconfirm --noprogressbar git pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
 _repo_path="${REPO}/${CARCH}"
@@ -74,7 +74,7 @@ for _path in "$(pwd)"/*; do
             su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
         fi
     elif [ -f ./REPKGBUILD ]; then
-        remakepkg -f
+        remakepkg -f --repkgrel "$(cat ./REPKGREL 2>/dev/null || echo '1')"
         for _pkg in ./*.pkg.*; do
             mv "$_pkg" /tmp/repo/
         done
