@@ -85,7 +85,10 @@ done
 
 cd ..
 rm -f /tmp/repo/*.sig
-if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
+if {
+    find /tmp/repo -type f -name '*.pkg.*' -print0 |
+        xargs -r0 repo-add "/tmp/repo/${REPO}.db.tar.zst"
+}; then
     git clean -dfX
 
     restore_stash="true"
@@ -97,10 +100,9 @@ if [ -z "$(find /tmp/repo -maxdepth 0 -type d -empty)" ]; then
     git checkout repo
     trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
 
-    git clean -xfd
+    git clean -dfx
     mkdir -p "$_repo_path"
     rsync /tmp/repo/ "${_repo_path}/" -a --copy-links --remove-source-files
-    repo-add "${_repo_path}/${REPO}.db.tar.zst" "${_repo_path}"/*.pkg.*
     git add -A
     git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"
     git push origin repo
