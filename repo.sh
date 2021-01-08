@@ -74,7 +74,7 @@ for _path in "$(pwd)"/*; do
             su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
         fi
     elif [ -f ./REPKGBUILD ]; then
-        remakepkg -f --repkgrel "$(cat ./REPKGREL 2>/dev/null || echo '1')"
+        remakepkg -f -R "$(cat ./REPKGREL 2>/dev/null || echo '1')"
         for _pkg in ./*.pkg.*; do
             mv "$_pkg" /tmp/repo/
         done
