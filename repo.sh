@@ -41,7 +41,7 @@ pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
-pacman -Syq --noconfirm --noprogressbar git rsync git-lfs pacman base-devel pacman-hacks-build
+pacman -Syq --noconfirm --noprogressbar git git-lfs pacman base-devel pacman-hacks-build
 
 # Retrieve current packages in repo
 _repo_path="${REPO}/${CARCH}"
@@ -75,7 +75,7 @@ for _path in "$(pwd)"/*; do
             su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
         fi
     elif [ -f ./REPKGBUILD ]; then
-        remakepkg -f
+        remakepkg -f -R "$(cat ./REPKGREL 2>/dev/null || echo '1')"
         for _pkg in ./*.pkg.*; do
             mv "$_pkg" /tmp/repo/
         done
@@ -85,10 +85,7 @@ done
 
 cd ..
 rm -f /tmp/repo/*.sig
-if {
-    find /tmp/repo -type f -name '*.pkg.*' -print0 |
-        xargs -r0 repo-add "/tmp/repo/${REPO}.db.tar.zst"
-}; then
+if find /tmp/repo -type f -name '*.pkg.*'; then
     git clean -dfX
 
     restore_stash="true"
@@ -102,7 +99,16 @@ if {
 
     git clean -dfx
     mkdir -p "$_repo_path"
-    rsync /tmp/repo/ "${_repo_path}/" -a --copy-links --remove-source-files
+
+    # Copy new packages
+    mv /tmp/repo/*.pkg.* "${_repo_path}/"
+
+    # Generate new repository database
+    find . -type f -name '*.pkg.*' | sort -t- | xargs -r repo-add "${_repo_path}/${REPO}.db.tar.zst"
+
+    # Resolve symlinks
+    find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
+
     git add -A
     git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"
     git push origin repo
