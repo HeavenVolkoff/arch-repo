@@ -17,7 +17,7 @@ jobs:
           lfs: true
           fetch-depth: 0
 
-      - name: Build packages on Archlinux docker 
+      - name: Build packages on Archlinux docker
         run: |
           docker run \
             -w /src \
@@ -25,11 +25,10 @@ jobs:
             -e PUID="$(id -g)" \
             -e PGID="$(id -g)" \
             -e REPO="hvolkoff" \
-            -e GIT_AUTHOR_NAME="Vítor Vasconcellos" \
-            -e GIT_COMMITTER_NAME="Vítor Vasconcellos" \
-            -e EMAIL="vasconcellos.dev@gmail.com" \
-            -e GIT_COMMITTER_EMAIL="vasconcellos.dev@gmail.com" \
-            -e GIT_COMMITTER_EMAIL="vasconcellos.dev@gmail.com" \
+            -e GIT_AUTHOR_NAME="github-actions[bot]" \
+            -e GIT_COMMITTER_NAME="github-actions[bot]" \
+            -e EMAIL="github-actions[bot]@users.noreply.github.com" \
+            -e GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
+            -e GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
             --rm --init --entrypoint bash \
             archlinux:latest repo.sh
-
