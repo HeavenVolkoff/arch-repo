@@ -111,7 +111,7 @@ while IFS= read -r -d '' _pkg; do
     _pkgname="$(echo "$_pkginfo" | awk -F' = ' '{ if ($1 == "pkgname") print $2 }')"
     if ! grep -q "${_pkgname}-${_pkgver}" /tmp/packages.txt; then
         mv "$_pkg" "${_repo_path}/"
-        _pkgs="$(printf '%s\n%s' "$_pkgs" "$(basename "$_pkg")")"
+        _pkgs="$(printf '%s\n%s' "$_pkgs" "${_repo_path}/$(basename "$_pkg")")"
     fi
 done < <(find /tmp/repo -type f -name '*.pkg.*' -print0 | sort -zt-)
 
