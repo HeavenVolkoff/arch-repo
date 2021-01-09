@@ -55,6 +55,7 @@ git lfs install
 git submodule update --init --remote --recursive
 
 # Build packages
+_failures=()
 for _path in "$(pwd)"/*; do
     [ -d "$_path" ] || continue
     cd "$_path"
@@ -72,10 +73,15 @@ for _path in "$(pwd)"/*; do
             _status=$((_return + _status))
         done
         if [ "$_status" -ne 0 ]; then
-            su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar
+            if ! su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar; then
+                _failures+=("$_path")
+            fi
         fi
     elif [ -f ./REPKGBUILD ]; then
-        remakepkg -f -R "$(cat ./REPKGREL 2>/dev/null || echo '1')"
+        if ! remakepkg -d -f -R "$(cat ./REPKGREL 2>/dev/null || echo '1')"; then
+            _failures+=("$_path")
+            continue
+        fi
         for _pkg in ./*.pkg.*; do
             mv "$_pkg" /tmp/repo/
         done
@@ -103,26 +109,34 @@ mkdir -p "$_repo_path"
 
 # Remove generated pacakge signature files
 rm -f /tmp/repo/*.sig
-_pkgs=""
+
 # Only copy packages which are not already present in database
+_pkgs=()
 while IFS= read -r -d '' _pkg; do
     _pkginfo="$(tar -Oxf "$_pkg" .PKGINFO)"
     _pkgver="$(echo "$_pkginfo" | awk -F' = ' '{ if ($1 == "pkgver") print $2 }')"
     _pkgname="$(echo "$_pkginfo" | awk -F' = ' '{ if ($1 == "pkgname") print $2 }')"
     if ! grep -q "${_pkgname}-${_pkgver}" /tmp/packages.txt; then
         mv "$_pkg" "${_repo_path}/"
-        _pkgs="$(printf '%s\n%s' "$_pkgs" "${_repo_path}/$(basename "$_pkg")")"
+        _pkgs+=("${_repo_path}/$(basename "$_pkg")")
     fi
 done < <(find /tmp/repo -type f -name '*.pkg.*' -print0 | sort -zt-)
 
 # Generate new repository database
-echo "$_pkgs" | xargs -r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
+echo "${_pkgs[@]}" | xargs -r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
 
 # Resolve symlinks to hard copies
 find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
 
 # Commit/push new packages
 git add -A
-git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"
-git push origin repo
+if git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"; then
+    git push origin repo
+fi
 chown -R "${PUID:-1000}:${PGID:-1000}" .
+
+if [ "${#_failures[@]}" -gt 0 ]; then
+    echo "Failed to build packages:" 1>&2
+    printf ' - %s\n' "${_failures[@]}" 1>&2
+    exit 1
+fi
