@@ -39,13 +39,33 @@ pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
-pacman -Syq --noconfirm --noprogressbar git git-lfs pacman base-devel pacman-hacks-build
+pacman -Syq --noconfirm --noprogressbar git git-lfs pacman openssh base-devel pacman-hacks-build
 
 trap 'git clean -dfX' EXIT
 
+set +x
+
+# Configure gitlab SSH key and access
+mkdir ~/.ssh
+cat "$GITLAB_DEPLOY_KEY" > ~/.ssh/id_ed25519
+ssh-keyscan -H gitlab.com > ~/.ssh/known_hosts
+cat << EOF > ~/.ssh/config
+Host gitlab
+    HostName gitlab.com
+    IdentityFile ~/.ssh/id_ed25519
+    User git
+EOF
+chmod -R 600 ~/.ssh
+ssh-agent -a /tmp/ssh-auth.sock
+export SSH_AUTH_SOCK=/tmp/ssh-auth.sock
+ssh-add ~/.ssh/id_ed25519
+
+set -x
+
 # Retrieve current packages in repo
 _repo_path="${REPO}/${CARCH}"
-git fetch origin repo:repo
+git remote add gitlab "$GITLAB_REPO"
+git fetch gitlab repo:repo
 git show "repo:${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
     grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
 chown builder:builder /tmp/packages.txt
@@ -131,7 +151,7 @@ find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath
 # Commit/push new packages
 git add -A
 if git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"; then
-    git push origin repo
+    git push gitlab repo
 fi
 chown -R "${PUID:-1000}:${PGID:-1000}" .
 

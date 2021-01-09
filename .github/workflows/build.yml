@@ -18,16 +18,20 @@ jobs:
           fetch-depth: 0
 
       - name: Build packages on Archlinux docker
+        env:
+          GITLAB_DEPLOY_KEY: ${{ secrets.GITLAB_DEPLOY_KEY }}
         run: |
           docker run \
             -w /src \
             -v "$(pwd)":/src \
             -e PUID="$(id -g)" \
             -e PGID="$(id -g)" \
-            -e REPO="hvolkoff" \
-            -e GIT_AUTHOR_NAME="github-actions[bot]" \
-            -e GIT_COMMITTER_NAME="github-actions[bot]" \
+            -e REPO="vasconcellos" \
             -e EMAIL="github-actions[bot]@users.noreply.github.com" \
+            -e GITLAB_REPO="git@gitlab.com:VitorVasconcellos/arch-repo.git" \
+            -e GIT_AUTHOR_NAME="github-actions[bot]" \
+            -e GITLAB_DEPLOY_KEY="$GITLAB_DEPLOY_KEY" \
+            -e GIT_COMMITTER_NAME="github-actions[bot]" \
             -e GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
             -e GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
             --rm --init --entrypoint bash \
