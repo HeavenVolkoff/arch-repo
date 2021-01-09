@@ -46,8 +46,8 @@ trap 'git clean -dfX' EXIT
 set +x
 
 # Configure gitlab SSH key and access
-mkdir ~/.ssh
-printf -- '%s' "$GITLAB_DEPLOY_KEY" >~/.ssh/id_ed25519
+mkdir -p ~/.ssh
+printf -- '%s\n' "$GITLAB_DEPLOY_KEY" >~/.ssh/id_ed25519
 ssh-keyscan -H gitlab.com >~/.ssh/known_hosts
 cat <<EOF >~/.ssh/config
 Host gitlab
@@ -56,8 +56,7 @@ Host gitlab
     User git
 EOF
 chmod -R 600 ~/.ssh
-ssh-agent -a /tmp/ssh-auth.sock
-export SSH_AUTH_SOCK=/tmp/ssh-auth.sock
+eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 
 set -x
