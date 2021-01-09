@@ -116,10 +116,10 @@ while IFS= read -r -d '' _pkg; do
 done < <(find /tmp/repo -type f -name '*.pkg.*' -print0 | sort -zt-)
 
 # Generate new repository database
-echo "$_pkgs" | xargs -0r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
+echo "$_pkgs" | xargs -r repo-add -n -R "${_repo_path}/${REPO}.db.tar.zst"
 
 # Resolve symlinks to hard copies
-find . -type l -print0 | xargs -rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
+find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath "$1")" "$1"' sh {}
 
 # Commit/push new packages
 git add -A
