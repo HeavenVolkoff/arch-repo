@@ -2,8 +2,6 @@
 
 set -xeu
 
-trap 'git clean -dfX' EXIT
-
 # makepkg needs a non root user
 groupadd builder -g "${PGID:-1000}"
 useradd builder -m -u "${PUID:-1000}" -g "${PGID:-1000}"
@@ -42,6 +40,8 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
 pacman -Syq --noconfirm --noprogressbar git git-lfs pacman base-devel pacman-hacks-build
+
+trap 'git clean -dfX' EXIT
 
 # Retrieve current packages in repo
 _repo_path="${REPO}/${CARCH}"
