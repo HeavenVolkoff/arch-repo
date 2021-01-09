@@ -47,9 +47,9 @@ set +x
 
 # Configure gitlab SSH key and access
 mkdir ~/.ssh
-cat "$GITLAB_DEPLOY_KEY" > ~/.ssh/id_ed25519
-ssh-keyscan -H gitlab.com > ~/.ssh/known_hosts
-cat << EOF > ~/.ssh/config
+printf -- '%s' "$GITLAB_DEPLOY_KEY" >~/.ssh/id_ed25519
+ssh-keyscan -H gitlab.com >~/.ssh/known_hosts
+cat <<EOF >~/.ssh/config
 Host gitlab
     HostName gitlab.com
     IdentityFile ~/.ssh/id_ed25519
