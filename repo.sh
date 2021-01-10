@@ -119,7 +119,7 @@ if ! git diff-index --quiet HEAD --; then
     restore_stash="git stash apply"
 fi
 
-git checkout repo
+git checkout -b repo --track gitlab/repo
 trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
 git clean -dfx
 
