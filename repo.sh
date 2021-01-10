@@ -10,6 +10,7 @@ chown -R builder:builder .
 
 # Make output repository for packages
 mkdir -p /tmp/repo
+chown builder:builder /tmp/repo
 
 # Change some makepkg options
 cp /etc/makepkg.conf /tmp/makepkg.conf
