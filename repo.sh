@@ -8,13 +8,11 @@ useradd builder -m -u "${PUID:-1000}" -g "${PGID:-1000}"
 echo "builder ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 chown -R builder:builder .
 
-# Make output repository for pakcages
+# Make output repository for packages
 mkdir -p /tmp/repo
-chown builder:builder /tmp/repo
 
 # Change some makepkg options
 cp /etc/makepkg.conf /tmp/makepkg.conf
-chown builder:builder /tmp/makepkg.conf
 sed -Ei 's\^#?PKGEXT=.*$\PKGEXT=.pkg.tar.zst\' /tmp/makepkg.conf
 sed -Ei "s\\^#?PKGDEST=.*$\\PKGDEST=/tmp/repo\\" /tmp/makepkg.conf
 sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=$(nproc)\\" /tmp/makepkg.conf
@@ -45,7 +43,7 @@ trap 'git clean -dfX' EXIT
 
 set +x
 
-# Configure gitlab SSH key and access
+# Configure gitlab SSH key and remote access
 mkdir -p ~/.ssh
 printf -- '%s\n' "$GITLAB_DEPLOY_KEY" >~/.ssh/id_ed25519
 ssh-keyscan -H gitlab.com >~/.ssh/known_hosts
@@ -61,17 +59,28 @@ ssh-add ~/.ssh/id_ed25519
 
 set -x
 
-# Retrieve current packages in repo
-_repo_path="${REPO}/${CARCH}"
-git remote add gitlab "$GITLAB_REPO"
+# Update submodules
+git submodule update --init --remote --recursive
+
+# Remove Github origin
+git remote rm origin
+
+# Add Gitlab origin
+git remote add origin "$GITLAB_REPO"
+
+# Initialize LFS
+git lfs install
+
+# Update repo with new remote
+git fetch -apP --all
+
+# Initialize repo branch
 git fetch gitlab repo:repo
+
+# Retrieve repository database and resolve current packages
+_repo_path="${REPO}/${CARCH}"
 git show "repo:${_repo_path}/${REPO}.db.tar.zst" | tar -tvf - --zst |
     grep -e "^d" | awk '{print $6}' | tr -d '/' >/tmp/packages.txt
-chown builder:builder /tmp/packages.txt
-
-# Update submodules
-git lfs install
-git submodule update --init --remote --recursive
 
 # Build packages
 _failures=()
@@ -108,17 +117,18 @@ for _path in "$(pwd)"/*; do
     fi
 done
 
-# Change branch to repo
+# Cleanup build leftovers
 cd ..
-
 git clean -dfX
 
+# Stash any changes to avoid error when changing branches
 restore_stash="true"
 if ! git diff-index --quiet HEAD --; then
     git stash -uaq
     restore_stash="git stash apply"
 fi
 
+# Change branch to repo
 git checkout repo
 trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
 git clean -dfx
@@ -126,7 +136,8 @@ git clean -dfx
 # Ensure repo directory exists
 mkdir -p "$_repo_path"
 
-# Remove generated pacakge signature files
+# TODO: Setup repository signing and stop removing signature files
+# Remove generated package signature files
 rm -f /tmp/repo/*.sig
 
 # Only copy packages which are not already present in database
@@ -150,10 +161,13 @@ find . -type l -print0 | xargs -0rI{} sh -c 'cp --remove-destination "$(realpath
 # Commit/push new packages
 git add -A
 if git commit -m "$(printf 'Update repository packages:\n%s' "$(git diff --cached --name-status)")"; then
-    git push gitlab repo
+    git push origin repo
 fi
-chown -R "${PUID:-1000}:${PGID:-1000}" .
 
+# Avoid any errors on future stages due to permission
+chown -R builder:builder .
+
+# Report any package build faulure
 if [ "${#_failures[@]}" -gt 0 ]; then
     echo "Failed to build packages:" 1>&2
     printf ' - %s\n' "${_failures[@]}" 1>&2
