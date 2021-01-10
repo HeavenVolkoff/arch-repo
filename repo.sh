@@ -75,7 +75,7 @@ git lfs install
 git fetch -apP --all
 
 # Initialize repo branch
-git fetch gitlab repo:repo
+git fetch origin repo:repo
 
 # Retrieve repository database and resolve current packages
 _repo_path="${REPO}/${CARCH}"
