@@ -1,0 +1,6 @@
+[submodule "mcmojave-circle-icon-theme-git"]
+	path = mcmojave-circle-icon-theme-git
+	url = https://aur.archlinux.org/mcmojave-circle-icon-theme-git
+[submodule "mojave-gtk-theme-git"]
+	path = mojave-gtk-theme-git
+	url = https://aur.archlinux.org/mojave-gtk-theme-git
