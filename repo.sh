@@ -2,6 +2,8 @@
 
 set -xeu
 
+pacman -Sy
+
 # makepkg needs a non root user
 groupadd builder -g "${PGID:-1000}"
 useradd builder -m -u "${PUID:-1000}" -g "${PGID:-1000}"

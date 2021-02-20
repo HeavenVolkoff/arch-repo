@@ -34,5 +34,5 @@ jobs:
             -e GIT_COMMITTER_NAME="github-actions[bot]" \
             -e GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
             -e GIT_COMMITTER_EMAIL="github-actions[bot]@users.noreply.github.com" \
-            --rm --init --entrypoint bash \
-            archlinux:latest repo.sh
+            --init --entrypoint bash \
+            archlinux:base-devel repo.sh
