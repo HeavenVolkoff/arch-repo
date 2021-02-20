@@ -4,3 +4,6 @@
 [submodule "mojave-gtk-theme-git"]
 	path = mojave-gtk-theme-git
 	url = https://aur.archlinux.org/mojave-gtk-theme-git
+[submodule "docker-ipv6nat"]
+	path = docker-ipv6nat
+	url = https://aur.archlinux.org/docker-ipv6nat
