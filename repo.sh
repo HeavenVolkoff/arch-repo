@@ -7,9 +7,13 @@ set -xeu
 env PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::Shell->install("URI")'
 
 # Parse glic package direct URL from arch repository and Manually install glibc package
-curl -L# "$(\
+curl -L# "$(
     perl -MURI -se 'print URI->new($glibc_path)->abs("https://repo.archlinuxcn.org/x86_64/")' -- \
-        -glibc_path="$(curl -L# 'https://repo.archlinuxcn.org/x86_64/' | perl -lne 'printf for /<a\shref="(glibc-linux.*\.zst)"\s*>/')"
+        -glibc_path="$(
+            curl -L# 'https://repo.archlinuxcn.org/x86_64/' |
+                perl -ne 'print($_,"\n") for /<a\shref="(glibc-linux.*\.zst)"\s*>/' |
+                sort -Vr | head -n1
+        )"
 )" | bsdtar -C / -xvf-
 ################################################################################
 
