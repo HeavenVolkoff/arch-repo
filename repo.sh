@@ -25,7 +25,7 @@ chown -R builder:builder .
 
 # Make output repository for packages
 mkdir -p /tmp/repo
-chown builder:builder /tmp/repo
+chown builder:builder /tmp/repo &>/dev/null
 
 # Change some makepkg options
 cp /etc/makepkg.conf /tmp/makepkg.conf
@@ -35,7 +35,7 @@ sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=$(nproc)\\" /tmp/makepkg.conf
 eval "$(grep 'CARCH' /etc/makepkg.conf)"
 
 # Add zuepfe-original repo for pacman-hacks
-cat <<EOF >/etc/pacman.conf
+cat <<EOF >>/etc/pacman.conf
 [zuepfe-repkg]
 SigLevel = Required DatabaseRequired
 Server = http://archlinux.zuepfe.net/\$repo/os/\$arch
@@ -43,9 +43,9 @@ Server = http://archlinux.zuepfe.net/\$repo/os/\$arch
 [zuepfe-original]
 SigLevel = Required DatabaseRequired
 Server = http://archlinux.zuepfe.net/\$repo/os/\$arch
-
-$(cat /etc/pacman.conf)
 EOF
+
+# Add zuepfe-original repo keys
 pacman-key --init
 pacman-key --recv-keys FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --recv-keys BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
