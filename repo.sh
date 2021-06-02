@@ -53,7 +53,7 @@ pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
-pacman -Syq --needed --noconfirm --noprogressbar --overwrite '*' git git-lfs pacman openssh base-devel pacman-hacks-build docker
+pacman -Syuq --needed --noconfirm --noprogressbar --overwrite '*' git git-lfs pacman openssh base-devel pacman-hacks-build docker
 
 trap 'git clean -dfX' EXIT
 
