@@ -35,7 +35,8 @@ sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=$(nproc)\\" /tmp/makepkg.conf
 eval "$(grep 'CARCH' /etc/makepkg.conf)"
 
 # Change keyserve to something that works better
-echo "$(cat /etc/pacman.d/gnupg/gpg.conf | sed -e 's@^keyserver\s\s*.*$@keyserver hkp://keyserver.ubuntu.com@')" > /etc/pacman.d/gnupg/gpg.conf
+sed '/^keyserver\s\s*.*$/d' /etc/pacman.d/gnupg/gpg.conf
+echo "keyserver hkp://keyserver.ubuntu.com" >> /etc/pacman.d/gnupg/gpg.conf
 
 # Add zuepfe-original repo for pacman-hacks
 cat <<EOF >>/etc/pacman.conf
