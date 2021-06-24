@@ -35,7 +35,7 @@ sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=$(nproc)\\" /tmp/makepkg.conf
 eval "$(grep 'CARCH' /etc/makepkg.conf)"
 
 # Change keyserve to something that works better
-sed '/^keyserver\s\s*.*$/d' /etc/pacman.d/gnupg/gpg.conf
+sed -i.bak '/^keyserver\s\s*.*$/d' /etc/pacman.d/gnupg/gpg.conf
 echo "keyserver hkp://keyserver.ubuntu.com" >> /etc/pacman.d/gnupg/gpg.conf
 
 # Add zuepfe-original repo for pacman-hacks
@@ -53,8 +53,8 @@ EOF
 pacman-key --init
 pacman-key --recv-keys FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
 pacman-key --recv-keys BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
-pacman-key --edit-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
-pacman-key --edit-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
+pacman-key --lsign-key FE8CF63AD2306FD41A5500E6DCD45EAF921A7822
+pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
 pacman -Syuq --needed --noconfirm --noprogressbar --overwrite '*' git git-lfs pacman openssh base-devel pacman-hacks-build docker
