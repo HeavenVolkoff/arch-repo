@@ -10,7 +10,7 @@ env PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::Shell->install("URI")'
 curl -L# "$(
     perl -MURI -se 'print URI->new($glibc_path)->abs("https://repo.archlinuxcn.org/x86_64/")' -- \
         -glibc_path="$(
-            curl -L# 'https://repo.archlinuxcn.org/x86_64/' |
+            curl -L# "https://repo.archlinuxcn.org/$(uname -m)/" |
                 perl -ne 'print($_,"\n") for /<a\shref="(glibc-linux.*\.zst)"\s*>/' |
                 sort -Vr | head -n1
         )"

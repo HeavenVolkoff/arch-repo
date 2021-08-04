@@ -7,3 +7,6 @@
 [submodule "docker-ipv6nat"]
 	path = docker-ipv6nat
 	url = https://aur.archlinux.org/docker-ipv6nat
+[submodule "qt5-base-headless"]
+	path = qt5-base-headless
+	url = https://aur.archlinux.org/qt5-base-headless.git
