@@ -142,15 +142,13 @@ cd ..
 git clean -dfX
 
 # Stash any changes to avoid error when changing branches
-restore_stash="true"
 if ! git diff-index --quiet HEAD --; then
     git stash -uaq
-    restore_stash="git stash apply"
 fi
 
 # Change branch to repo
 git checkout repo
-trap 'git stash -uaq && git checkout main && $restore_stash && chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
+trap 'git reset --hard main; chown -R "${PUID:-1000}:${PGID:-1000}" .' EXIT
 git clean -dfx
 
 # Ensure repo directory exists
