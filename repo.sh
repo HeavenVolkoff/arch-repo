@@ -30,8 +30,8 @@ chown builder:builder /tmp/repo &>/dev/null
 # Change some makepkg options
 cp /etc/makepkg.conf /tmp/makepkg.conf
 sed -Ei 's\^#?PKGEXT=.*$\PKGEXT=.pkg.tar.zst\' /tmp/makepkg.conf
-sed -Ei "s\\^#?PKGDEST=.*$\\PKGDEST=/tmp/repo\\" /tmp/makepkg.conf
-sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=$(nproc)\\" /tmp/makepkg.conf
+sed -Ei 's\^#?PKGDEST=.*$\PKGDEST=/tmp/repo\' /tmp/makepkg.conf
+sed -Ei "s\\^#?MAKEFLAGS=.*$\\MAKEFLAGS=-j$(nproc)\\" /tmp/makepkg.conf
 eval "$(grep 'CARCH' /etc/makepkg.conf)"
 
 # Change keyserve to something that works better
@@ -121,7 +121,7 @@ for _path in "$(pwd)"/*; do
             _status=$((_return + _status))
         done
         if [ "$_status" -ne 0 ]; then
-            if ! su -- builder makepkg -Ccfs --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar; then
+            if ! su -- builder makepkg -Ccfsi --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar; then
                 _failures+=("$_path")
             fi
         fi
