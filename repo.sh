@@ -58,6 +58,7 @@ pacman-key --lsign-key BFA8FEC40FE5207557484B35C8E50C5960ED8B9C
 
 # Install build dependencies
 pacman -Syuq --needed --noconfirm --noprogressbar --overwrite '*' git git-lfs pacman openssh base-devel pacman-hacks-build docker
+pacman -Scc
 
 trap 'git clean -dfX' EXIT
 
@@ -124,6 +125,7 @@ for _path in "$(pwd)"/*; do
             if ! su -- builder makepkg -Ccfsi --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar; then
                 _failures+=("$_path")
             fi
+            pacman -Scc
         fi
     elif [ -f ./REPKGBUILD ]; then
         if ! remakepkg -d -f -R "$(cat ./REPKGREL 2>/dev/null || echo '1')"; then
