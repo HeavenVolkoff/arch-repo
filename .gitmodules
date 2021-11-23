@@ -10,3 +10,9 @@
 [submodule "qt5-base-headless"]
 	path = qt5-base-headless
 	url = https://aur.archlinux.org/qt5-base-headless.git
+[submodule "alvr-git"]
+	path = alvr-git
+	url = https://aur.archlinux.org/alvr-git.git
+[submodule "ffmpeg-vulkan"]
+	path = ffmpeg-vulkan
+	url = https://aur.archlinux.org/ffmpeg-vulkan.git
