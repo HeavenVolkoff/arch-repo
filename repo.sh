@@ -122,13 +122,14 @@ for _path in "$(pwd)"/*; do
 
             if [ -n "$_epoch" ]; then
                 if grep -q "${_pkgname}-${_epoch}:${_pkgver}-${_pkgrel}" /tmp/packages.txt; then
-                    _status=1
-                    break
+                    continue
                 fi
             elif grep -q "${_pkgname}-${_pkgver}-${_pkgrel}" /tmp/packages.txt; then
-                _status=1
-                break
+                continue
             fi
+
+            _status=1
+            break
         done
         if [ "$_status" -eq 1 ]; then
             if ! su -- builder makepkg -Ccfsi --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar; then
