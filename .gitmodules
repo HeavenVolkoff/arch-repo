@@ -16,3 +16,15 @@
 [submodule "02-alvr-git"]
 	path = 02-alvr-git
 	url = https://aur.archlinux.org/alvr-git.git
+[submodule "01-libnvidia-container"]
+	path = 01-libnvidia-container
+	url = https://aur.archlinux.org/libnvidia-container.git
+[submodule "02-libnvidia-container-tools"]
+	path = 02-libnvidia-container-tools
+	url = https://aur.archlinux.org/libnvidia-container.git
+[submodule "03-nvidia-container-toolkit"]
+	path = 03-nvidia-container-toolkit
+	url = https://aur.archlinux.org/nvidia-container-toolkit.git
+[submodule "04-nvidia-container-runtime"]
+	path = 04-nvidia-container-runtime
+	url = https://aur.archlinux.org/nvidia-container-runtime.git
