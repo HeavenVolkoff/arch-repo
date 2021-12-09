@@ -36,7 +36,7 @@ eval "$(grep 'CARCH' /etc/makepkg.conf)"
 
 # Change keyserve to something that works better
 sed -i.bak '/^keyserver\s\s*.*$/d' /etc/pacman.d/gnupg/gpg.conf
-echo "keyserver hkp://keyserver.ubuntu.com" >> /etc/pacman.d/gnupg/gpg.conf
+echo "keyserver hkp://keyserver.ubuntu.com" >>/etc/pacman.d/gnupg/gpg.conf
 
 # Add zuepfe-original repo for pacman-hacks
 cat <<EOF >>/etc/pacman.conf
@@ -110,6 +110,7 @@ for _path in "$(pwd)"/*; do
     cd "$_path"
     if [ -f ./PKGBUILD ]; then
         _srcinfo="$(su -- builder makepkg --printsrcinfo | tr -d "[:blank:]")"
+        _epoch="$(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "epoch") print $2 }')"
         _pkgver="$(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "pkgver") print $2 }')"
         _pkgrel="$(echo "$_srcinfo" | awk -F'=' '{ if ($1 == "pkgrel") print $2 }')"
         _status=0
@@ -118,10 +119,18 @@ for _path in "$(pwd)"/*; do
                 _status=1
                 break
             fi
-            _return="$(grep -q "${_pkgname}-${_pkgver}-${_pkgrel}" /tmp/packages.txt && echo 0 || echo 1)"
-            _status=$((_return + _status))
+
+            if [ -n "$_epoch" ]; then
+                if grep -q "${_pkgname}-${_epoch}:${_pkgver}-${_pkgrel}" /tmp/packages.txt; then
+                    _status=1
+                    break
+                fi
+            elif grep -q "${_pkgname}-${_pkgver}-${_pkgrel}" /tmp/packages.txt; then
+                _status=1
+                break
+            fi
         done
-        if [ "$_status" -ne 0 ]; then
+        if [ "$_status" -eq 1 ]; then
             if ! su -- builder makepkg -Ccfsi --config /tmp/makepkg.conf --needed --noconfirm --noprogressbar; then
                 _failures+=("$_path")
             fi
