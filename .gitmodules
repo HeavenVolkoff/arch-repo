@@ -28,3 +28,12 @@
 [submodule "04-nvidia-container-runtime"]
 	path = 04-nvidia-container-runtime
 	url = https://aur.archlinux.org/nvidia-container-runtime.git
+[submodule "cairo-minimal"]
+	path = cairo-minimal
+	url = https://aur.archlinux.org/cairo-minimal.git
+[submodule "01-libva-headless"]
+	path = 01-libva-headless
+	url = https://aur.archlinux.org/libva-headless.git
+[submodule "02-ffmpeg-headless"]
+	path = 02-ffmpeg-headless
+	url = https://aur.archlinux.org/ffmpeg-headless.git
