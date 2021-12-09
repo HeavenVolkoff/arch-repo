@@ -50,7 +50,7 @@ Server = http://archlinux.zuepfe.net/\$repo/os/\$arch
 
 [vasconcellos]
 SigLevel = Optional
-Server = https://gitlab.com/VitorVasconcellos/arch-repo/-/raw/repo/$repo/$arch
+Server = https://gitlab.com/VitorVasconcellos/arch-repo/-/raw/repo/\$repo/\$arch
 EOF
 
 # Add zuepfe-original repo keys
