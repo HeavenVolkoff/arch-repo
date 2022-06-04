@@ -4,17 +4,17 @@ set -xeu
 
 ### WORKAROUND https://bugs.archlinux.org/index.php?do=details&task_id=69563 ###
 # Install CPAN URI
-env PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::Shell->install("URI")'
+#env PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::Shell->install("URI")'
 
 # Parse glic package direct URL from arch repository and Manually install glibc package
-curl -L# "$(
-    perl -MURI -se 'print URI->new($glibc_path)->abs("https://repo.archlinuxcn.org/x86_64/")' -- \
-        -glibc_path="$(
-            curl -L# "https://repo.archlinuxcn.org/$(uname -m)/" |
-                perl -ne 'print($_,"\n") for /<a\shref="(glibc-linux.*\.zst)"\s*>/' |
-                sort -Vr | head -n1
-        )"
-)" | bsdtar -C / -xvf-
+#curl -L# "$(
+#    perl -MURI -se 'print URI->new($glibc_path)->abs("https://repo.archlinuxcn.org/x86_64/")' -- \
+#        -glibc_path="$(
+#            curl -L# "https://repo.archlinuxcn.org/$(uname -m)/" |
+#                perl -ne 'print($_,"\n") for /<a\shref="(glibc-linux.*\.zst)"\s*>/' |
+#                sort -Vr | head -n1
+#        )"
+#)" | bsdtar -C / -xvf-
 ################################################################################
 
 # makepkg needs a non root user
