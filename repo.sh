@@ -85,6 +85,7 @@ ssh-add ~/.ssh/id_ed25519
 set -x
 
 # Update submodules
+git config --global --add safe.directory /src
 git submodule update --init --remote --recursive
 
 # Remove Github origin
