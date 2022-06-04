@@ -1,4 +1,4 @@
-repkg extra/nvidia-open
+repkg extra/nvidia-open-dkms
 
 remove-depend libglvnd
 add-optdepend libglvnd: Needed for using OpenGL application
